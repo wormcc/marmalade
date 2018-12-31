@@ -1,0 +1,16 @@
+{
+  "debug": true,
+  "server": {
+    "address": ":9000"
+  },
+  "database": {
+    "host": "localhost",
+    "port": "3306",
+    "user": "user",
+    "pass": "password",
+    "name": "marmalade"
+  },
+  "context": {
+    "timeout": 5
+  }
+}
