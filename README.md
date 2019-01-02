@@ -5,6 +5,6 @@ A platform for api administration written in Golang
 ````
 go get "github.com/wormcc/marmalade"
 dep ensure
-go run main.go    
+go run main.go web   
 
 ````

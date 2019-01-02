@@ -42,8 +42,23 @@ func (r *mysqlAccountRepository) fetch(ctx context.Context, query string, args .
 }
 
 func (r *mysqlAccountRepository) GetById(ctx context.Context, id int64) (*models.Account, error) {
-	query := `SELECT id, name, email, update_at, create_at FROM account WHERE id=?`
+	query := `SELECT * FROM account WHERE id=?`
 	list, err := r.fetch(ctx, query, id)
+	if err != nil {
+		return nil, err
+	}
+	accountFound := &models.Account{}
+	if len(list) > 0 {
+		accountFound = list[0]
+	} else {
+		return nil, models.ErrNotFound
+	}
+	return accountFound, nil
+}
+
+func (r *mysqlAccountRepository) GetByEmail(ctx context.Context, email string) (*models.Account, error) {
+	query := `SELECT * FROM account WHERE email=?`
+	list, err := r.fetch(ctx, query, email)
 	if err != nil {
 		return nil, err
 	}
@@ -78,5 +93,20 @@ func (r *mysqlAccountRepository) Update(ctx context.Context, account *models.Acc
 }
 
 func (r *mysqlAccountRepository) Store(ctx context.Context, account *models.Account) error {
+	query := `INSERT account SET name=?, email=?, password=?, create_at=?, update_at=?`
+	stmt, err := r.Conn.PrepareContext(ctx, query)
+	if err != nil {
+		return err
+	}
+
+	res, err := stmt.ExecContext(ctx, account.Name, account.Email, account.Password, account.CreateAt, account.UpdateAt)
+	if err != nil {
+		return err
+	}
+	lastId, err := res.LastInsertId()
+	if err != nil {
+		return err
+	}
+	account.ID = lastId
 	return nil
 }

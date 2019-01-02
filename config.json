@@ -6,8 +6,8 @@
   "database": {
     "host": "localhost",
     "port": "3306",
-    "user": "user",
-    "pass": "password",
+    "user": "root",
+    "pass": "fan@811",
     "name": "marmalade"
   },
   "context": {

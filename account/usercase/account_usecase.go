@@ -2,9 +2,9 @@ package usercase
 
 import (
 	"context"
+	"fmt"
 	"github.com/wormcc/marmalade/account"
 	"github.com/wormcc/marmalade/models"
-	"golang.org/x/crypto/bcrypt"
 	"time"
 )
 
@@ -20,7 +20,17 @@ func NewAccountUseCase(accountRepo account.Repository, timeout time.Duration) ac
 func (au *accountUseCase) GetById(c context.Context, accountId int64) (*models.Account, error) {
 	ctx, cancel := context.WithTimeout(c, au.contextTimeout)
 	defer cancel()
-	res, err := au.accountRepo.GetById(ctx, id)
+	res, err := au.accountRepo.GetById(ctx, accountId)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (au *accountUseCase) GetByEmail(c context.Context, email string) (*models.Account, error) {
+	ctx, cancel := context.WithTimeout(c, au.contextTimeout)
+	defer cancel()
+	res, err := au.accountRepo.GetByEmail(ctx, email)
 	if err != nil {
 		return nil, err
 	}
@@ -28,19 +38,23 @@ func (au *accountUseCase) GetById(c context.Context, accountId int64) (*models.A
 }
 
 func (au *accountUseCase) Store(c context.Context, account *models.Account) error {
-	return nil
-}
-
-func (au *accountUseCase) UpdatePassword(c context.Context, password string, accountId int64) error {
 	ctx, cancel := context.WithTimeout(c, au.contextTimeout)
 	defer cancel()
-	res, err := au.accountRepo.GetById(ctx, accountId)
+	existedAccount, err := au.accountRepo.GetByEmail(ctx, account.Email)
+	fmt.Println(existedAccount, err)
+	if existedAccount != nil {
+		return models.ErrUnique
+	}
+	err = au.accountRepo.Store(ctx, account)
 	if err != nil {
 		return err
 	}
-	bytePassword := []byte(password)
-	passwordHash, _ := bcrypt.GenerateFromPassword(bytePassword, bcrypt.DefaultCost)
-	res.Password = string(passwordHash)
-	err = au.accountRepo.Update(ctx, res)
+	return nil
+}
+
+func (au *accountUseCase) Update(c context.Context, accountModel *models.Account) error {
+	ctx, cancel := context.WithTimeout(c, au.contextTimeout)
+	defer cancel()
+	err := au.accountRepo.Update(ctx, accountModel)
 	return err
 }
